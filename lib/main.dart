@@ -1,9 +1,18 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import './pages/tflite.dart';
 import './pages/socketio.dart';
 import './pages/restapi.dart';
 
-void main() {
+List<CameraDescription> cameras;
+
+Future<Null> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    cameras = await availableCameras();
+  } on CameraException catch (e) {
+    print('Error: $e.code\nError Message: $e.message');
+  }
   runApp(MyApp());
 }
 
@@ -52,13 +61,13 @@ class MyTabsState extends State<MyHome> with SingleTickerProviderStateMixin {
       appBar: AppBar(title: Text('Feature Demo')),
       body: TabBarView(
         controller: controller,
-        children: <Widget>[Tflite(), SocketIO(), RestApi()],
+        children: <Widget>[TfliteExample(cameras), SocketIO(), RestApi()],
       ),
       bottomNavigationBar: Container(
         child: TabBar(
           controller: controller,
           tabs: [
-            Tab(icon: Icon(Icons.table_chart), text: 'TFLite'),
+            Tab(icon: Icon(Icons.table_chart), text: 'TFLiteExample'),
             Tab(icon: Icon(Icons.donut_small), text: 'socketio',),
             Tab(icon: Icon(Icons.cloud), text: 'restApi'),
           ]
