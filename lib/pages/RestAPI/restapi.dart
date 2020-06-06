@@ -201,43 +201,20 @@ class FriendsListState extends State<FriendsList> {
     });
   }
 
-  getToggleFriendsList() {
+  getToggleFriendsList(List<FriendModel> friends) {
     if (friendsOpen) {
       //ListView를 Expanded로 감싸 Horizontal viewport was given unbounded height 에러 해결
       return Expanded(
-        child: ListView(
-          children: <FriendsListItem>[
-            FriendsListItem(
-                name: '정연길',
-                message: '상태 메세지 입니다',
-                music: 'Square(2017)',
-                musician: '백예린'),
-            FriendsListItem(
-                name: '정의정',
-                message: '상태 메세지 입니다',
-                music: 'Homebody',
-                musician: 'pH-1'),
-            FriendsListItem(
-                name: '강진범 멘토님',
-                message: '상태 메세지 입니다',
-                music: '폰서트',
-                musician: '10CM'),
-            FriendsListItem(
-                name: '오우택 멘토님',
-                message: '상태 메세지 입니다',
-                music: '워커홀릭',
-                musician: '볼빨간사춘기'),
-            FriendsListItem(
-                name: '이한솔 멘토님',
-                message: '상태 메세지 입니다',
-                music: '11:11',
-                musician: '태연(TAEYEON)'),
-            FriendsListItem(
-                name: '주영민 멘토님',
-                message: '상태 메세지 입니다',
-                music: '마이동풍',
-                musician: '배치기'),
-          ],
+        child: ListView.builder(
+          itemCount: friends.length,
+          itemBuilder: (context, index) {
+            return FriendsListItem(
+              name: friends[index].name,
+              message: friends[index].message,
+              music: friends[index].music,
+              musician: friends[index].musician,
+            );
+          },
         ),
       );
     } else {
@@ -277,15 +254,26 @@ class FriendsListState extends State<FriendsList> {
         Row(
           children: <Widget>[
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.only(left: 17, top: 7, bottom: 3),
-                child: Text(
-                  '친구 ' + '5',
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black45),
-                ),
+              child: FutureBuilder<FriendsListResponse>(
+                future: futureFriendsListFromServer,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return Container(
+                      padding:
+                          const EdgeInsets.only(left: 17, top: 7, bottom: 3),
+                      child: Text(
+                        '친구 ' + snapshot.data.data.friendsNum.toString(),
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.black45),
+                      ),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Text("${snapshot.error}");
+                  }
+                  return CircularProgressIndicator();
+                },
               ),
             ),
             Container(
@@ -297,12 +285,11 @@ class FriendsListState extends State<FriendsList> {
             )
           ],
         ),
-        getToggleFriendsList(),
         FutureBuilder<FriendsListResponse>(
           future: futureFriendsListFromServer,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              return Text(snapshot.data.data.friends[0].name.toString());
+              return getToggleFriendsList(snapshot.data.data.friends);
             } else if (snapshot.hasError) {
               return Text("${snapshot.error}");
             }
@@ -324,64 +311,3 @@ Future<FriendsListResponse> fetchFriendsList() async {
     throw Exception('Failed to load FriendsList');
   }
 }
-
-/*
-Row(
-  children: <Widget>[
-    Container(
-        margin: const EdgeInsets.only(left: 17, right: 12),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(17.0),
-          child: Image.asset(
-            'images/anonymous.jpg',
-            width: 43,
-            height: 43,
-            fit: BoxFit.contain,
-          ),
-        )),
-    Expanded(
-        child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      //mainAxisAlignment: MainAxisAlignment.start,
-      children: <Widget>[
-        Text('김성윤',
-            style:
-                TextStyle(fontSize: 15.5, fontWeight: FontWeight.w500)),
-        Container(
-            padding: const EdgeInsets.only(top: 2.5),
-            child: Text(
-              '상태 메세지 입니다.',
-              style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.black38),
-            )),
-      ],
-    )),
-    Container(
-      margin: EdgeInsets.only(right: 15),
-      child: Container(
-          padding: const EdgeInsets.only(
-              top: 3.5, bottom: 3.5, left: 10, right: 5),
-          decoration: BoxDecoration(
-              border: Border.all(width: 1.1, color: _melonColor),
-              borderRadius: BorderRadius.circular(12)),
-          child: Row(
-            children: <Widget>[
-              Text('Square(2017) - 백예린',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black54,
-                  )),
-              Container(
-                  padding: EdgeInsets.only(bottom: 1.5),
-                  child: Icon(Icons.play_arrow,
-                      color: _melonColor, size: 14.5))
-            ],
-          ),
-      ),
-    )
-  ],
-),
-*/
