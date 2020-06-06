@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'dart:convert';
+import 'friendslist_model.dart';
 
 class RestApi extends StatelessWidget {
   @override
@@ -149,7 +153,7 @@ class MelonMusic extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(right: 15),
+      margin: const EdgeInsets.only(right: 15),
       child: Container(
         padding:
             const EdgeInsets.only(top: 3.5, bottom: 3.5, left: 10, right: 5),
@@ -182,8 +186,14 @@ class FriendsList extends StatefulWidget {
 }
 
 class FriendsListState extends State<FriendsList> {
-
   bool friendsOpen = true;
+  Future<FriendsListResponse> futureFriendsListFromServer;
+
+  @override
+  void initState() {
+    super.initState();
+    futureFriendsListFromServer = fetchFriendsList();
+  }
 
   void toggle() {
     setState(() {
@@ -268,7 +278,7 @@ class FriendsListState extends State<FriendsList> {
           children: <Widget>[
             Expanded(
               child: Container(
-                padding: EdgeInsets.only(left: 17, top: 7, bottom: 3),
+                padding: const EdgeInsets.only(left: 17, top: 7, bottom: 3),
                 child: Text(
                   '친구 ' + '5',
                   style: TextStyle(
@@ -279,7 +289,7 @@ class FriendsListState extends State<FriendsList> {
               ),
             ),
             Container(
-              margin: EdgeInsets.only(right: 15),
+              margin: const EdgeInsets.only(right: 15),
               child: GestureDetector(
                 onTap: toggle,
                 child: getToggleFriendsListIcon(),
@@ -288,8 +298,30 @@ class FriendsListState extends State<FriendsList> {
           ],
         ),
         getToggleFriendsList(),
+        FutureBuilder<FriendsListResponse>(
+          future: futureFriendsListFromServer,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return Text(snapshot.data.data.friends[0].name.toString());
+            } else if (snapshot.hasError) {
+              return Text("${snapshot.error}");
+            }
+            return CircularProgressIndicator();
+          },
+        ),
       ],
     );
+  }
+}
+
+Future<FriendsListResponse> fetchFriendsList() async {
+  const String BASE_URL =
+      'http://ec2-15-165-222-146.ap-northeast-2.compute.amazonaws.com:3000';
+  final response = await http.get(BASE_URL + '/friends');
+  if (response.statusCode == 200) {
+    return FriendsListResponse.fromJson(json.decode(response.body));
+  } else {
+    throw Exception('Failed to load FriendsList');
   }
 }
 
