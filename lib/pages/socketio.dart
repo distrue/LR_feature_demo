@@ -12,11 +12,8 @@ class SocketIO extends StatelessWidget {
       children: <Widget>[
         ActionBar(),
         Expanded(
-          child: Container(
-            color: _kakaoBackgroundColor,
-          ),
-        ),
-        InputArea(),
+          child: MessageList(),
+        )
       ],
     );
   }
@@ -54,14 +51,18 @@ class ActionBar extends StatelessWidget {
   }
 }
 
-class InputArea extends StatefulWidget {
-  InputArea({Key key}) : super(key: key);
+class MessageList extends StatefulWidget {
+  final WebSocketChannel channel =
+      IOWebSocketChannel.connect('ws://15.164.167.20:4000/');
+  MessageList({Key key}) : super(key: key);
 
   @override
-  InputAreaState createState() => InputAreaState();
+  MessageListState createState() => MessageListState();
 }
 
-class InputAreaState extends State<InputArea> {
+class MessageListState extends State<MessageList> {
+  List<String> messages = List<String>();
+  ScrollController _scrollController = new ScrollController();
   TextEditingController _textEditingController = new TextEditingController();
   bool isTextFieldEmpty = true;
 
@@ -69,77 +70,112 @@ class InputAreaState extends State<InputArea> {
   void initState() {
     super.initState();
     _textEditingController.addListener(textFieldOnChange);
+    widget.channel.stream.listen((data) {
+      debugPrint("11111/DataReceived: " + data);
+      setState(() {
+        messages.add(data);
+      });
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 600),
+        curve: Curves.ease,
+      );
+    }, onDone: () {
+      debugPrint("11111/Task Done");
+    }, onError: (error) {
+      debugPrint("11111/Some Error");
+    });
   }
 
   void textFieldOnChange() {
-    //debugPrint(_textEditingController.text.length.toString() + "/" + isTextFieldEmpty.toString());
     if (_textEditingController.text.length == 0 && !isTextFieldEmpty) {
       setState(() {
         isTextFieldEmpty = true;
       });
-    }
-    else if (_textEditingController.text.length != 0 && isTextFieldEmpty){
+    } else if (_textEditingController.text.length != 0 && isTextFieldEmpty) {
       setState(() {
         isTextFieldEmpty = false;
       });
     }
   }
 
+  void _sendMessage(String text) {
+    widget.channel.sink.add(text);
+    _textEditingController.clear();
+  }
+
   @override
   void dispose() {
     _textEditingController.dispose();
+    widget.channel.sink.close();
     super.dispose();
-  }
-
-  Widget getSendIcon() {
-    Container icon;
-    if(isTextFieldEmpty){
-      return _buildIcon(Icons.keyboard_voice);
-    }
-    else {
-      return Container(
-        color: _kakaoColor,
-        padding: const EdgeInsets.all(11),
-        child: Icon(
-          Icons.send,
-          size: 28,
-        ),
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Row(
-        children: <Widget>[
-          _buildIcon(Icons.add_circle_outline),
-          Expanded(
-            child: TextField(
-              cursorColor: Color(0xff2e5984),
-              cursorWidth: 1,
-              controller: _textEditingController,
-              keyboardType: TextInputType.multiline,
-              minLines: 1,
-              maxLines: 4,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                errorBorder: InputBorder.none,
-                disabledBorder: InputBorder.none,
+    return Column(
+      children: <Widget>[
+        Expanded(
+            child: ListView.builder(
+          scrollDirection: Axis.vertical,
+          itemCount: messages.length,
+          controller: _scrollController,
+          itemBuilder: (BuildContext context, int index) {
+            //TODO Implement Message Widget
+            return Text(messages[index], style: TextStyle(fontSize: 30),);
+          },
+        )),
+        Row(
+          children: <Widget>[
+            _buildIcon(Icons.add_circle_outline),
+            Expanded(
+              child: TextField(
+                cursorColor: Color(0xff2e5984),
+                cursorWidth: 1,
+                controller: _textEditingController,
+                keyboardType: TextInputType.multiline,
+                minLines: 1,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                ),
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w400,
+            ),
+            _buildIcon(Icons.tag_faces),
+            getSendIcon(),
+          ],
+        )
+      ],
+    );
+  }
+
+  Widget getSendIcon() {
+    if (isTextFieldEmpty) {
+      return _buildIcon(Icons.keyboard_voice);
+    } else {
+      return GestureDetector(
+          onTap: () => _sendMessage(_textEditingController.text),
+          child: Container(
+            color: _kakaoColor,
+            child: Container(
+              padding: const EdgeInsets.all(11),
+              child: Icon(
+                Icons.send,
+                size: 28,
+                color: Colors.black,
               ),
             ),
           ),
-          _buildIcon(Icons.tag_faces),
-          getSendIcon(),
-        ],
-      ),
-    );
+      );
+    }
   }
 
   Container _buildIcon(IconData icon) {
