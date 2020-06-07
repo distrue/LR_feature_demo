@@ -227,19 +227,19 @@ class FriendsListState extends State<FriendsList> {
   }
 
   getToggleFriendsListIcon() {
-    if (friendsOpen) {
-      return Icon(
-        Icons.keyboard_arrow_up,
+    IconData iconData;
+    if (friendsOpen)
+      iconData = Icons.keyboard_arrow_up;
+    else
+      iconData = Icons.keyboard_arrow_down;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      child: Icon(
+        iconData,
         size: 17,
         color: Colors.black54,
-      );
-    } else {
-      return Icon(
-        Icons.keyboard_arrow_down,
-        size: 17,
-        color: Colors.black54,
-      );
-    }
+      ),
+    );
   }
 
   @override
@@ -253,16 +253,16 @@ class FriendsListState extends State<FriendsList> {
       child: Text('SeongYunKim'),
     );
     */
-    return Column(
-      children: [
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: FutureBuilder<FriendsListResponse>(
-                future: futureFriendsListFromServer,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return Container(
+    return FutureBuilder<FriendsListResponse>(
+      future: futureFriendsListFromServer,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Column(
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Container(
                       padding:
                           const EdgeInsets.only(left: 17, top: 7, bottom: 3),
                       child: Text(
@@ -272,35 +272,24 @@ class FriendsListState extends State<FriendsList> {
                             fontWeight: FontWeight.w400,
                             color: Colors.black45),
                       ),
-                    );
-                  } else if (snapshot.hasError) {
-                    return Text("${snapshot.error}");
-                  }
-                  return CircularProgressIndicator();
-                },
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: toggle,
+                    child: getToggleFriendsListIcon(),
+                  ),
+                ],
               ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(right: 15),
-              child: GestureDetector(
-                onTap: toggle,
-                child: getToggleFriendsListIcon(),
-              ),
-            )
-          ],
-        ),
-        FutureBuilder<FriendsListResponse>(
-          future: futureFriendsListFromServer,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return getToggleFriendsList(snapshot.data.data.friends);
-            } else if (snapshot.hasError) {
-              return Text("${snapshot.error}");
-            }
-            return CircularProgressIndicator();
-          },
-        ),
-      ],
+              getToggleFriendsList(snapshot.data.data.friends),
+            ],
+          );
+        } else if (snapshot.hasError) {
+          return Text("${snapshot.error}");
+        }
+        return Center(
+          child: CircularProgressIndicator(),
+        );
+      },
     );
   }
 }
