@@ -61,7 +61,7 @@ class MyTabsState extends State<MyHome> with SingleTickerProviderStateMixin {
       appBar: AppBar(title: Text('Feature Demo')),
       body: TabBarView(
         controller: controller,
-        children: <Widget>[TfliteExample(cameras), SocketIO(), RestApi()],
+        children: <Widget>[TfliteExample(), SocketIO(), RestApi()],
       ),
       bottomNavigationBar: Container(
         child: TabBar(

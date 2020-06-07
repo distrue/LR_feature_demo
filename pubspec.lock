@@ -171,7 +171,7 @@ packages:
     source: hosted
     version: "0.2.15"
   tflite:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: tflite
       url: "https://pub.dartlang.org"
