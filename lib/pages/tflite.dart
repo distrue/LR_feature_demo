@@ -63,10 +63,7 @@ class _CameraWMState extends State<CameraWithModel> {
                 children: <Widget>[CameraPreview(controller)] + _renderKeypoints());
              }
           }
-          return AspectRatio(
-            aspectRatio: controller.value.aspectRatio,
-            child: CameraPreview(controller),
-            );
+          return CameraPreview(controller);
         }
         
         List<Widget> _renderKeypoints() {
@@ -76,21 +73,21 @@ class _CameraWMState extends State<CameraWithModel> {
               var _x = k['x'];
               var _y = k['y'];
               var scaleW, scaleH, x, y;
-      
+
               if (screenH / screenW > previewH / previewW) {
                 scaleW = screenH / previewH * previewW;
                 scaleH = screenH;
                 var difW = (scaleW - screenW) / scaleW;
-                x = (_x - difW / 2) * scaleW;
+                x = (_x - difW / 2) * scaleW + 100;
                 y = _y * scaleH;
               } else {
                 scaleH = screenW / previewW * previewH;
-                scaleW = screenW;
+                 scaleW = screenW;
                 var difH = (scaleH - screenH) / scaleH;
-                x = _x * scaleW;
-                y = (_y - difH / 2) * scaleH;
+                x = _x * scaleW + 100;
+                y = (_y - difH / 2) * scaleH; 
               }
-              
+
               return Positioned(
                 left: x-6,
                 top: y-6,
@@ -113,7 +110,7 @@ class _CameraWMState extends State<CameraWithModel> {
       
      Future<Null> loadModel() async {
        try {
-         final String result = await Tflite.loadModel(model: "assets/posenet_mv1_075_float_from_checkpoints.tflite");
+         final String result = await Tflite.loadModel(model: "assets/posenet_mobilenet_v1_100_257x257_multi_kpt_stripped.tflite");
        }
        on PlatformException catch (e) {
          print("Error: ${e.code}\nError Message: ${e.message}");
@@ -123,7 +120,7 @@ class _CameraWMState extends State<CameraWithModel> {
     void _initCameraController(CameraDescription cameraDescription) {
       controller = CameraController(cameraDescription, ResolutionPreset.low);
       controller.initialize().then((_) {
-         previewH = math.max(controller.value.previewSize.height, controller.value.previewSize.width);
+      previewH = math.max(controller.value.previewSize.height, controller.value.previewSize.width);
       previewW = math.min(controller.value.previewSize.height, controller.value.previewSize.width);
       controller.startImageStream(onAvailable);
       });
