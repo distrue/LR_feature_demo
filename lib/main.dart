@@ -2,7 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import './pages/tflite.dart';
 import './pages/socketio.dart';
-import './pages/restapi.dart';
+import 'pages/RestAPI/restapi.dart';
 
 List<CameraDescription> cameras;
 

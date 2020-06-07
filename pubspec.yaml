@@ -23,6 +23,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^0.12.1
   camera:
   tflite: ^1.0.6
 
@@ -46,10 +47,12 @@ flutter:
   uses-material-design: true
   
   # To add assets to your application, add an assets section, like this:
-  
+
   assets:
+    - images/anonymous.jpg
     - assets/posenet_mv1_075_float_from_checkpoints.tflite
     - assets/posenet_mobilenet_v1_100_257x257_multi_kpt_stripped.tflite
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 
