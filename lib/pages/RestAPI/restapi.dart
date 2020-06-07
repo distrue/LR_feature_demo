@@ -10,18 +10,22 @@ class RestApi extends StatelessWidget {
     return Column(
       children: <Widget>[
         ActionBar(),
-        FriendsListItem(
-            name: '김성윤',
-            message: '상태 메세지 입니다',
-            music: '더 위로',
-            musician: '창모(CHANGMO)'),
-        Container(
-          height: 0.5,
-          color: Colors.black12,
-          margin: const EdgeInsets.symmetric(vertical: 7, horizontal: 17),
-        ),
         Expanded(
-          child: FriendsList(),
+          child: ListView(
+            children: <Widget>[
+              FriendsListItem(
+                  name: '김성윤',
+                  message: '상태 메세지 입니다',
+                  music: '더 위로',
+                  musician: '창모(CHANGMO)'),
+              Container(
+                height: 0.5,
+                color: Colors.black12,
+                margin: const EdgeInsets.symmetric(vertical: 7, horizontal: 17),
+              ),
+              FriendsList(),
+            ],
+          ),
         )
       ],
     );
@@ -203,19 +207,19 @@ class FriendsListState extends State<FriendsList> {
 
   getToggleFriendsList(List<FriendModel> friends) {
     if (friendsOpen) {
-      //ListView를 Expanded로 감싸 Horizontal viewport was given unbounded height 에러 해결
-      return Expanded(
-        child: ListView.builder(
-          itemCount: friends.length,
-          itemBuilder: (context, index) {
-            return FriendsListItem(
-              name: friends[index].name,
-              message: friends[index].message,
-              music: friends[index].music,
-              musician: friends[index].musician,
-            );
-          },
-        ),
+      return ListView.builder(
+        shrinkWrap: true,
+        scrollDirection: Axis.vertical,
+        physics: NeverScrollableScrollPhysics(),
+        itemCount: friends.length,
+        itemBuilder: (context, index) {
+          return FriendsListItem(
+            name: friends[index].name,
+            message: friends[index].message,
+            music: friends[index].music,
+            musician: friends[index].musician,
+          );
+        },
       );
     } else {
       return Container();
