@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-const String _name = "User132";
+const String _name = '김성윤';
 const _kakaoBackgroundColor = Color(0xffaec3d2);
 const _kakaoColor = Color(0xfff8de00);
 
@@ -11,6 +11,14 @@ class SocketIO extends StatelessWidget {
     return Column(
       children: <Widget>[
         ActionBar(),
+        ChatMessageItem(
+          text: 'Zero100 그룹채팅 입니다.',
+          isMyMessage: false,
+        ),
+        ChatMessageItem(
+          text: '반갑습니다~',
+          isMyMessage: true,
+        ),
         Expanded(
           child: MessageList(),
         )
@@ -121,8 +129,8 @@ class MessageListState extends State<MessageList> {
           itemCount: messages.length,
           controller: _scrollController,
           itemBuilder: (BuildContext context, int index) {
-            //TODO Implement Message Widget
-            return Text(messages[index], style: TextStyle(fontSize: 30),);
+            //TODO 내 이름과 보낸 사람 이름을 비교?
+            return ChatMessageItem(text: messages[index], isMyMessage: true);
           },
         )),
         Row(
@@ -162,18 +170,18 @@ class MessageListState extends State<MessageList> {
       return _buildIcon(Icons.keyboard_voice);
     } else {
       return GestureDetector(
-          onTap: () => _sendMessage(_textEditingController.text),
+        onTap: () => _sendMessage(_textEditingController.text),
+        child: Container(
+          color: _kakaoColor,
           child: Container(
-            color: _kakaoColor,
-            child: Container(
-              padding: const EdgeInsets.all(11),
-              child: Icon(
-                Icons.send,
-                size: 28,
-                color: Colors.black,
-              ),
+            padding: const EdgeInsets.all(11),
+            child: Icon(
+              Icons.send,
+              size: 28,
+              color: Colors.black,
             ),
           ),
+        ),
       );
     }
   }
@@ -185,6 +193,114 @@ class MessageListState extends State<MessageList> {
         icon,
         size: 28,
         color: Colors.black26,
+      ),
+    );
+  }
+}
+
+class ChatMessageItem extends StatelessWidget {
+  ChatMessageItem({this.text, this.isMyMessage});
+
+  final String text;
+  final bool isMyMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isMyMessage) {
+      return Container(
+        padding: EdgeInsets.only(right: 10, top: 5, bottom: 5),
+        color: _kakaoBackgroundColor,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: <Widget>[
+            getMessageBubble(context, isMyMessage),
+          ],
+        ),
+      );
+    } else {
+      return Container(
+        padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
+        color: _kakaoBackgroundColor,
+        child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                margin: EdgeInsets.only(right: 5),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16.0),
+                  child: Image.asset(
+                    'images/anonymous.jpg',
+                    width: 39,
+                    height: 39,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  //TODO 보낸 사람 이름
+                  Container(
+                    padding: EdgeInsets.only(top: 3, bottom: 6),
+                    child: Text(
+                      _name,
+                      style: TextStyle(
+                          fontSize: 12.5, fontWeight: FontWeight.w400),
+                    ),
+                  ),
+                  getMessageBubble(context, isMyMessage),
+                ],
+              )
+            ]),
+      );
+    }
+    /*
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            margin: const EdgeInsets.only(right: 16.0),
+            child: CircleAvatar(child: Text(_name[0])),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(_name),
+              Container(
+                margin: const EdgeInsets.only(top: 5.0),
+                child: Text(text),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+    */
+  }
+
+  Container getMessageBubble(BuildContext context, bool isMyMessage) {
+    Color color;
+    if (isMyMessage)
+      color = _kakaoColor;
+    else
+      color = Color(0xffffffff);
+    return Container(
+      constraints:
+          BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.6),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.only(top: 8, bottom: 8, right: 11, left: 11),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 15.5,
+          fontWeight: FontWeight.w400,
+        ),
       ),
     );
   }
@@ -265,32 +381,3 @@ class _MyHomePageState extends State<SocketIO> {
   }
 }
 */
-class ChatMessage extends StatelessWidget {
-  ChatMessage({this.text});
-  final String text;
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            margin: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(child: Text(_name[0])),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(_name),
-              Container(
-                margin: const EdgeInsets.only(top: 5.0),
-                child: Text(text),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
