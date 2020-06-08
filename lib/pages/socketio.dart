@@ -19,10 +19,6 @@ class SocketIO extends StatelessWidget {
           text: 'Zero100 그룹채팅 입니다.',
           isMyMessage: false,
         ),
-        ChatMessageItem(
-          text: '반갑습니다~',
-          isMyMessage: true,
-        ),
         Expanded(
           child: MessageList(),
         )
@@ -87,11 +83,7 @@ class MessageListState extends State<MessageList> {
       setState(() {
         messages.add(data);
       });
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: Duration(milliseconds: 600),
-        curve: Curves.ease,
-      );
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     }, onDone: () {
       debugPrint("11111/Task Done");
     }, onError: (error) {
@@ -128,15 +120,20 @@ class MessageListState extends State<MessageList> {
     return Column(
       children: <Widget>[
         Expanded(
+          child: Container(
+            color: _kakaoBackgroundColor,
             child: ListView.builder(
-          scrollDirection: Axis.vertical,
-          itemCount: messages.length,
-          controller: _scrollController,
-          itemBuilder: (BuildContext context, int index) {
-            //TODO 내 이름과 보낸 사람 이름을 비교?
-            return ChatMessageItem(text: messages[index], isMyMessage: true);
-          },
-        )),
+              scrollDirection: Axis.vertical,
+              itemCount: messages.length,
+              controller: _scrollController,
+              itemBuilder: (BuildContext context, int index) {
+                //TODO 내 이름과 보낸 사람 이름을 비교?
+                return ChatMessageItem(
+                    text: messages[index], isMyMessage: true);
+              },
+            ),
+          ),
+        ),
         Row(
           children: <Widget>[
             _buildIcon(Icons.add_circle_outline),
@@ -226,37 +223,38 @@ class ChatMessageItem extends StatelessWidget {
         decoration: boxDecoration,
         padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
         child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                margin: EdgeInsets.only(right: 5),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16.0),
-                  child: Image.asset(
-                    'images/anonymous.jpg',
-                    width: 39,
-                    height: 39,
-                    fit: BoxFit.contain,
-                  ),
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              margin: EdgeInsets.only(right: 5),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16.0),
+                child: Image.asset(
+                  'images/anonymous.jpg',
+                  width: 39,
+                  height: 39,
+                  fit: BoxFit.contain,
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  //TODO 보낸 사람 이름
-                  Container(
-                    padding: EdgeInsets.only(top: 3, bottom: 6),
-                    child: Text(
-                      _name,
-                      style: TextStyle(
-                          fontSize: 12.5, fontWeight: FontWeight.w400),
-                    ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                //TODO 보낸 사람 이름
+                Container(
+                  padding: EdgeInsets.only(top: 3, bottom: 6),
+                  child: Text(
+                    _name,
+                    style:
+                        TextStyle(fontSize: 12.5, fontWeight: FontWeight.w400),
                   ),
-                  getMessageBubble(context, isMyMessage),
-                ],
-              )
-            ]),
+                ),
+                getMessageBubble(context, isMyMessage),
+              ],
+            )
+          ],
+        ),
       );
     }
     /*
