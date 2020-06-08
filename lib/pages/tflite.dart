@@ -4,27 +4,21 @@ import 'package:flutter/services.dart';
 import 'package:tflite/tflite.dart';
 import 'dart:math' as math;
 
+class TfliteExample extends StatefulWidget {
+  TfliteExample({this.cameras});
 
+  final List<CameraDescription> cameras;
 
-class TfliteExample extends StatelessWidget {
-    @override
-    Widget build(BuildContext context){
-        return CameraWithModel();
-    }
-}
-
-class CameraWithModel extends StatefulWidget {
   @override
   _CameraWMState createState() {
     return _CameraWMState();
-  }  
+  }
 }
 
-class _CameraWMState extends State<CameraWithModel> {
+class _CameraWMState extends State<TfliteExample> {
   List<dynamic> _recognitions;
   CameraController controller;
   var tmp;
-  List cameras;
   double previewH;
   double previewW;
   double screenH;
@@ -33,15 +27,14 @@ class _CameraWMState extends State<CameraWithModel> {
   @override
   void initState() {
     super.initState();
-    availableCameras().then((availableCameras) {
-      cameras = availableCameras;
-      loadModel();
-      if (cameras.length > 0) {
-        _initCameraController(cameras[0]);
-      }
-    });
+    loadModel();
+    if (widget.cameras == null || widget.cameras.length < 1) {
+      debugPrint('No Camera Available');
+    } else {
+      _initCameraController(widget.cameras[0]);
+    }
   }
-      
+
   @override
   Widget build(BuildContext context) {
     var tmp = MediaQuery.of(context).size;
@@ -50,21 +43,29 @@ class _CameraWMState extends State<CameraWithModel> {
 
     return Scaffold(
       body: Container(
-        child: SafeArea(
-          child: _cameraPreviewWidget()
-          )));
+        child: SafeArea(child: _cameraPreviewWidget()),
+      ),
+    );
   }
-        
+
   Widget _cameraPreviewWidget() {
     if (!(_recognitions == null)) {
       if (_recognitions.isNotEmpty) {
         return Stack(
-          children: <Widget>[CameraPreview(controller)] + _renderKeypoints());
-        }
+            children: <Widget>[_cameraInitCheckWidget()] + _renderKeypoints());
+      }
     }
-    return CameraPreview(controller);
+    return _cameraInitCheckWidget();
   }
-  
+
+  Widget _cameraInitCheckWidget() {
+    if (controller == null || widget.cameras.length < 1) {
+      return Container();
+    } else {
+      return CameraPreview(controller);
+    }
+  }
+
   List<Widget> _renderKeypoints() {
     var lists = <Widget>[];
     _recognitions.forEach((re) {
@@ -81,24 +82,21 @@ class _CameraWMState extends State<CameraWithModel> {
           y = _y * scaleH;
         } else {
           scaleH = screenW / previewW * previewH;
-            scaleW = screenW;
+          scaleW = screenW;
           var difH = (scaleH - screenH) / scaleH;
           x = _x * scaleW + 100;
-          y = (_y - difH / 2) * scaleH; 
+          y = (_y - difH / 2) * scaleH;
         }
 
         return Positioned(
-          left: x-6,
-          top: y-6,
+          left: x - 6,
+          top: y - 6,
           width: 100,
           height: 12,
           child: Container(
-            child: Text(
-              "●",
-              style: TextStyle(
-                color: Color.fromRGBO(37, 213, 253, 1),
-                fontSize: 5)
-            ),
+            child: Text("●",
+                style: TextStyle(
+                    color: Color.fromRGBO(37, 213, 253, 1), fontSize: 5)),
           ),
         );
       }).toList();
@@ -109,9 +107,10 @@ class _CameraWMState extends State<CameraWithModel> {
 
   Future<Null> loadModel() async {
     try {
-      final String result = await Tflite.loadModel(model: "assets/posenet_mobilenet_v1_100_257x257_multi_kpt_stripped.tflite");
-    }
-    on PlatformException catch (e) {
+      final String result = await Tflite.loadModel(
+          model:
+              "assets/posenet_mobilenet_v1_100_257x257_multi_kpt_stripped.tflite");
+    } on PlatformException catch (e) {
       print("Error: ${e.code}\nError Message: ${e.message}");
     }
   }
@@ -119,23 +118,31 @@ class _CameraWMState extends State<CameraWithModel> {
   void _initCameraController(CameraDescription cameraDescription) {
     controller = CameraController(cameraDescription, ResolutionPreset.low);
     controller.initialize().then((_) {
-      previewH = math.max(controller.value.previewSize.height, controller.value.previewSize.width);
-      previewW = math.min(controller.value.previewSize.height, controller.value.previewSize.width);
+      previewH = math.max(controller.value.previewSize.height,
+          controller.value.previewSize.width);
+      previewW = math.min(controller.value.previewSize.height,
+          controller.value.previewSize.width);
+      if (!mounted) {
+        return;
+      }
+      setState(() {});
       controller.startImageStream(onAvailable);
     });
   }
 
   dynamic onAvailable(CameraImage img) async {
-    Tflite.runPoseNetOnFrame(bytesList: img.planes.map((plane) {
-      return plane.bytes;
-    }).toList(),
-      imageHeight: img.height,
-      imageWidth: img.width,
-      numResults: 1).then((recognitions) {
-        setState(() {
-          _recognitions = recognitions;
-        });
+    Tflite.runPoseNetOnFrame(
+            bytesList: img.planes.map((plane) {
+              return plane.bytes;
+            }).toList(),
+            imageHeight: img.height,
+            imageWidth: img.width,
+            numResults: 1)
+        .then((recognitions) {
+      setState(() {
+        _recognitions = recognitions;
       });
+    });
   }
 
   @override
@@ -143,4 +150,4 @@ class _CameraWMState extends State<CameraWithModel> {
     controller?.dispose();
     super.dispose();
   }
-} 
+}
