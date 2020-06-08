@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'dart:convert';
 
 const String _name = '김성윤';
 const _kakaoBackgroundColor = Color(0xffaec3d2);
@@ -69,7 +70,7 @@ class MessageList extends StatefulWidget {
 }
 
 class MessageListState extends State<MessageList> {
-  List<String> messages = List<String>();
+  List<Map<String, dynamic>> messages = List<Map<String, dynamic>>();
   ScrollController _scrollController = new ScrollController();
   TextEditingController _textEditingController = new TextEditingController();
   bool isTextFieldEmpty = true;
@@ -81,7 +82,7 @@ class MessageListState extends State<MessageList> {
     widget.channel.stream.listen((data) {
       debugPrint("11111/DataReceived: " + data);
       setState(() {
-        messages.add(data);
+        messages.add(json.decode(data));
       });
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     }, onDone: () {
@@ -104,7 +105,7 @@ class MessageListState extends State<MessageList> {
   }
 
   void _sendMessage(String text) {
-    widget.channel.sink.add(text);
+    widget.channel.sink.add(json.encode({'text': text, 'from': _name}));
     _textEditingController.clear();
   }
 
@@ -127,9 +128,8 @@ class MessageListState extends State<MessageList> {
               itemCount: messages.length,
               controller: _scrollController,
               itemBuilder: (BuildContext context, int index) {
-                //TODO 내 이름과 보낸 사람 이름을 비교?
                 return ChatMessageItem(
-                    text: messages[index], isMyMessage: true);
+                  text: messages[index]['text'], isMyMessage: messages[index]['from'] == _name);
               },
             ),
           ),
@@ -257,30 +257,6 @@ class ChatMessageItem extends StatelessWidget {
         ),
       );
     }
-    /*
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            margin: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(child: Text(_name[0])),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(_name),
-              Container(
-                margin: const EdgeInsets.only(top: 5.0),
-                child: Text(text),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-    */
   }
 
   Container getMessageBubble(BuildContext context, bool isMyMessage) {
@@ -307,79 +283,3 @@ class ChatMessageItem extends StatelessWidget {
     );
   }
 }
-
-/*
-class SocketIO extends StatefulWidget {
-  final WebSocketChannel channel =
-      IOWebSocketChannel.connect('ws://15.164.167.20:4000/');
-
-  SocketIO({Key key}) : super(key: key);
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<SocketIO> {
-  TextEditingController _controller = TextEditingController();
-
-  final TextEditingController _textController = new TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: <Widget>[
-          StreamBuilder(
-              stream: widget.channel.stream,
-              builder: (context, snapshot) {
-                return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24.0),
-                    child: Text(snapshot.hasData ? '${snapshot.data}' : ''));
-              }),
-          Divider(height: 1.0),
-          Container(
-            decoration: BoxDecoration(color: Theme.of(context).cardColor),
-            child: _buildTextComposer(),
-          )
-        ],
-      ),
-    );
-  }
-
-  void _sendMessage(String text) {
-    widget.channel.sink.add(text);
-  }
-
-  @override
-  void dispose() {
-    widget.channel.sink.close();
-    super.dispose();
-  }
-
-  Widget _buildTextComposer() {
-    return IconTheme(
-      data: IconThemeData(color: Theme.of(context).accentColor),
-      child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Row(
-            children: <Widget>[
-              Flexible(
-                child: TextField(
-                  controller: _textController,
-                  onSubmitted: _sendMessage,
-                  decoration:
-                      new InputDecoration.collapsed(hintText: "Send a message"),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: IconButton(
-                    icon: Icon(Icons.send),
-                    onPressed: () => _sendMessage(_textController.text)),
-              ),
-            ],
-          )),
-    );
-  }
-}
-*/
