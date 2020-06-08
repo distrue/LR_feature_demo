@@ -5,6 +5,10 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 const String _name = '김성윤';
 const _kakaoBackgroundColor = Color(0xffaec3d2);
 const _kakaoColor = Color(0xfff8de00);
+final boxDecoration = BoxDecoration(
+  color: _kakaoBackgroundColor,
+  border: Border.all(width: 0, color: _kakaoBackgroundColor),
+);
 
 class SocketIO extends StatelessWidget {
   Widget build(BuildContext context) {
@@ -31,7 +35,7 @@ class ActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: _kakaoBackgroundColor,
+      decoration: boxDecoration,
       padding: const EdgeInsets.all(7),
       child: Row(
         children: <Widget>[
@@ -208,8 +212,8 @@ class ChatMessageItem extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isMyMessage) {
       return Container(
+        decoration: boxDecoration,
         padding: EdgeInsets.only(right: 10, top: 5, bottom: 5),
-        color: _kakaoBackgroundColor,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
@@ -219,8 +223,8 @@ class ChatMessageItem extends StatelessWidget {
       );
     } else {
       return Container(
+        decoration: boxDecoration,
         padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
-        color: _kakaoBackgroundColor,
         child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
