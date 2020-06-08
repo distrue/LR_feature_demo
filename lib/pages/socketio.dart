@@ -16,10 +16,6 @@ class SocketIO extends StatelessWidget {
     return Column(
       children: <Widget>[
         ActionBar(),
-        ChatMessageItem(
-          text: 'Zero100 그룹채팅 입니다.',
-          isMyMessage: false,
-        ),
         Expanded(
           child: MessageList(),
         )
@@ -129,7 +125,9 @@ class MessageListState extends State<MessageList> {
               controller: _scrollController,
               itemBuilder: (BuildContext context, int index) {
                 return ChatMessageItem(
-                  text: messages[index]['text'], isMyMessage: messages[index]['from'] == _name);
+                    text: messages[index]['text'],
+                    userName: messages[index]['from'],
+                    isMyMessage: messages[index]['from'] == _name);
               },
             ),
           ),
@@ -200,9 +198,10 @@ class MessageListState extends State<MessageList> {
 }
 
 class ChatMessageItem extends StatelessWidget {
-  ChatMessageItem({this.text, this.isMyMessage});
+  ChatMessageItem({this.text, this.userName, this.isMyMessage});
 
   final String text;
+  final String userName;
   final bool isMyMessage;
 
   @override
@@ -245,7 +244,7 @@ class ChatMessageItem extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.only(top: 3, bottom: 6),
                   child: Text(
-                    _name,
+                    userName,
                     style:
                         TextStyle(fontSize: 12.5, fontWeight: FontWeight.w400),
                   ),
