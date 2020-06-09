@@ -5,34 +5,34 @@ import 'package:tflite/tflite.dart';
 import 'dart:math' as math;
 
 class TfliteExample extends StatefulWidget {
-  TfliteExample({this.cameras});
+  TfliteExample({this.cameras, this.appBarHeight});
 
   final List<CameraDescription> cameras;
+  final double appBarHeight;
 
   @override
-  _CameraWMState createState() {
-    return _CameraWMState();
+  _TfliteExampleState createState() {
+    return _TfliteExampleState();
   }
 }
 
-class _CameraWMState extends State<TfliteExample> {
+class _TfliteExampleState extends State<TfliteExample> {
   List<dynamic> _recognitions;
   CameraController controller;
+  var _imageHeight = 0;
+  var _imageWidth = 0;
   var tmp;
-  double previewH;
-  double previewW;
-  double screenH;
-  double screenW;
+  var previewH, previewW, screenH, screenW;
 
   @override
   void initState() {
     super.initState();
-    loadModel();
     if (widget.cameras == null || widget.cameras.length < 1) {
       debugPrint('No Camera Available');
     } else {
       _initCameraController(widget.cameras[0]);
     }
+    loadModel();
   }
 
   @override
@@ -40,25 +40,30 @@ class _CameraWMState extends State<TfliteExample> {
     var tmp = MediaQuery.of(context).size;
     screenH = math.max(tmp.height, tmp.width);
     screenW = math.min(tmp.height, tmp.width);
+    //tmp = controller.value.previewSize;
+    previewH = math.max(_imageHeight, _imageWidth);
+    previewW = math.min(_imageHeight, _imageWidth);
+    //var screenRatio = screenH / screenW;
+    //var previewRatio = previewH / previewW;
 
     return Scaffold(
       body: Container(
-        child: SafeArea(child: _cameraPreviewWidget()),
+        child: SafeArea(child: _cameraPreviewWidgetWithResult()),
       ),
     );
   }
 
-  Widget _cameraPreviewWidget() {
+  Widget _cameraPreviewWidgetWithResult() {
     if (!(_recognitions == null)) {
       if (_recognitions.isNotEmpty) {
         return Stack(
-            children: <Widget>[_cameraInitCheckWidget()] + _renderKeypoints());
+            children: <Widget>[_cameraPreviewWidgetWithoutResult()] + _renderKeypoints());
       }
     }
-    return _cameraInitCheckWidget();
+    return _cameraPreviewWidgetWithoutResult();
   }
 
-  Widget _cameraInitCheckWidget() {
+  Widget _cameraPreviewWidgetWithoutResult() {
     if (controller == null || widget.cameras.length < 1) {
       return Container();
     } else {
@@ -74,29 +79,34 @@ class _CameraWMState extends State<TfliteExample> {
         var _y = k['y'];
         var scaleW, scaleH, x, y;
 
+        debugPrint("KeyPoint - \nscreenH: " + screenH.toString() + "\nscreenW: " + screenW.toString() + "\npreviewH: " + previewH.toString() + "\npreviewW: " + previewW.toString());
         if (screenH / screenW > previewH / previewW) {
           scaleW = screenH / previewH * previewW;
           scaleH = screenH;
           var difW = (scaleW - screenW) / scaleW;
-          x = (_x - difW / 2) * scaleW + 100;
+          x = (_x - difW / 2) * scaleW;
           y = _y * scaleH;
         } else {
           scaleH = screenW / previewW * previewH;
           scaleW = screenW;
           var difH = (scaleH - screenH) / scaleH;
-          x = _x * scaleW + 100;
+          x = _x * scaleW;
           y = (_y - difH / 2) * scaleH;
         }
 
         return Positioned(
           left: x - 6,
-          top: y - 6,
+          top: y - 6 - widget.appBarHeight,
           width: 100,
           height: 12,
           child: Container(
-            child: Text("●",
-                style: TextStyle(
-                    color: Color.fromRGBO(37, 213, 253, 1), fontSize: 5)),
+            child: Text(
+              "● ${k["part"]}",
+              style: TextStyle(
+                color: Color.fromRGBO(37, 213, 253, 1.0),
+                fontSize: 12,
+              ),
+            ),
           ),
         );
       }).toList();
@@ -109,7 +119,8 @@ class _CameraWMState extends State<TfliteExample> {
     try {
       final String result = await Tflite.loadModel(
           model:
-              "assets/posenet_mobilenet_v1_100_257x257_multi_kpt_stripped.tflite");
+          "assets/posenet_mv1_075_float_from_checkpoints.tflite");
+          //"assets/posenet_mobilenet_v1_100_257x257_multi_kpt_stripped.tflite");
     } on PlatformException catch (e) {
       print("Error: ${e.code}\nError Message: ${e.message}");
     }
@@ -130,17 +141,19 @@ class _CameraWMState extends State<TfliteExample> {
     });
   }
 
-  dynamic onAvailable(CameraImage img) async {
+  dynamic onAvailable(CameraImage img) {
     Tflite.runPoseNetOnFrame(
-            bytesList: img.planes.map((plane) {
-              return plane.bytes;
-            }).toList(),
-            imageHeight: img.height,
-            imageWidth: img.width,
-            numResults: 1)
+        bytesList: img.planes.map((plane) {
+          return plane.bytes;
+        }).toList(),
+        imageHeight: img.height,
+        imageWidth: img.width,
+        numResults: 1)
         .then((recognitions) {
       setState(() {
         _recognitions = recognitions;
+        _imageHeight = img.height;
+        _imageWidth = img.width;
       });
     });
   }
