@@ -12,6 +12,7 @@ class FriendsListResponse {
   }
 }
 
+/*
 class FriendsListModel {
   final int friendsNum;
   final List<FriendModel> friends;
@@ -31,7 +32,23 @@ class FriendsListModel {
     );
   }
 }
+*/
 
+class FriendsListModel {
+  final List<FriendModel> friends;
+
+  const FriendsListModel({
+    this.friends,
+  });
+
+  factory FriendsListModel.fromJson(List<dynamic> json) {
+    List<FriendModel> friendsModelList =
+        json.map((i) => FriendModel.fromJson(i)).toList();
+    return FriendsListModel(friends: friendsModelList);
+  }
+}
+
+/*
 class FriendModel {
   final String name;
   final String message;
@@ -51,6 +68,24 @@ class FriendModel {
       message: json['message'],
       music: json['music'],
       musician: json['musician'],
+    );
+  }
+}
+*/
+
+class FriendModel {
+  final String id;
+  final String key;
+
+  const FriendModel({
+    this.id,
+    this.key,
+  });
+
+  factory FriendModel.fromJson(Map<String, dynamic> json) {
+    return FriendModel(
+      id: json['id'],
+      key: json['key'],
     );
   }
 }

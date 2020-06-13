@@ -132,6 +132,7 @@ class FriendInfo extends StatelessWidget {
             padding: const EdgeInsets.only(top: 2.5),
             child: Text(
               message,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w400,
@@ -157,7 +158,7 @@ class MelonMusic extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(right: 15),
+      margin: const EdgeInsets.only(right: 15, left: 60),
       child: Container(
         padding:
             const EdgeInsets.only(top: 3.5, bottom: 3.5, left: 10, right: 5),
@@ -191,12 +192,14 @@ class FriendsList extends StatefulWidget {
 
 class FriendsListState extends State<FriendsList> {
   bool friendsOpen = true;
-  Future<FriendsListResponse> futureFriendsListFromServer;
+  //Future<FriendsListResponse> futureFriendsListFromServer;
+  Future<FriendsListModel> futureFriendsListModel;
 
   @override
   void initState() {
     super.initState();
-    futureFriendsListFromServer = fetchFriendsList();
+    //futureFriendsListFromServer = fetchFriendsList();
+    futureFriendsListModel = fetchFriendsList();
   }
 
   void toggle() {
@@ -214,10 +217,12 @@ class FriendsListState extends State<FriendsList> {
         itemCount: friends.length,
         itemBuilder: (context, index) {
           return FriendsListItem(
-            name: friends[index].name,
-            message: friends[index].message,
-            music: friends[index].music,
-            musician: friends[index].musician,
+            name: friends[index].id,
+            message: friends[index].key,
+            //music: friends[index].music,
+            //musician: friends[index].musician,
+            music: '노래방에서',
+            musician: '장범준',
           );
         },
       );
@@ -244,17 +249,10 @@ class FriendsListState extends State<FriendsList> {
 
   @override
   Widget build(BuildContext context) {
-    /*
-    Why Scaffold Overflow?
-    return Scaffold(
-      body: Text('Seongyun Kim'),
-    );
-    return Container(
-      child: Text('SeongYunKim'),
-    );
-    */
-    return FutureBuilder<FriendsListResponse>(
-      future: futureFriendsListFromServer,
+    //return FutureBuilder<FriendsListResponse>(
+    //future: futureFriendsListFromServer,
+    return FutureBuilder<FriendsListModel>(
+      future: futureFriendsListModel,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           return Column(
@@ -266,7 +264,7 @@ class FriendsListState extends State<FriendsList> {
                       padding:
                           const EdgeInsets.only(left: 17, top: 7, bottom: 3),
                       child: Text(
-                        '친구 ' + snapshot.data.data.friendsNum.toString(),
+                        '친구 ' + snapshot.data.friends.length.toString(),
                         style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
@@ -280,7 +278,7 @@ class FriendsListState extends State<FriendsList> {
                   ),
                 ],
               ),
-              getToggleFriendsList(snapshot.data.data.friends),
+              getToggleFriendsList(snapshot.data.friends),
             ],
           );
         } else if (snapshot.hasError) {
@@ -294,12 +292,29 @@ class FriendsListState extends State<FriendsList> {
   }
 }
 
+/*
 Future<FriendsListResponse> fetchFriendsList() async {
   const String BASE_URL =
       'http://ec2-15-165-222-146.ap-northeast-2.compute.amazonaws.com:3000';
   final response = await http.get(BASE_URL + '/friends');
   if (response.statusCode == 200) {
     return FriendsListResponse.fromJson(json.decode(response.body));
+  } else {
+    throw Exception('Failed to load FriendsList');
+  }
+}
+*/
+
+Future<FriendsListModel> fetchFriendsList() async {
+  const String BASE_URL = 'http://15.164.167.20:5000';
+  Map<String, String> requestsHeaders = {
+    'X-Access-Token':
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlRlc3QiLCJrZXkiOiJiNWU0NGI0Zi0zZGMxLTRlYzYtOTI5OS04Mzg0OTkyZTM3MmQiLCJpYXQiOjE1OTIwNTUyMTMsImV4cCI6MTYxMzY1NTIxM30.60SopvoistR4ILgZZjpODJUwXrrXeRktJEzHu5NxM7c'
+  };
+  final response =
+      await http.get(BASE_URL + '/friends', headers: requestsHeaders);
+  if (response.statusCode == 200) {
+    return FriendsListModel.fromJson(json.decode(response.body));
   } else {
     throw Exception('Failed to load FriendsList');
   }
