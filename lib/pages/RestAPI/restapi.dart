@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'friendslist_model.dart';
@@ -290,6 +291,22 @@ class FriendsListState extends State<FriendsList> {
       },
     );
   }
+
+
+  Future<FriendsListModel> fetchFriendsList() async {
+    const String BASE_URL = 'http://15.164.167.20:5000';
+    Map<String, String> requestsHeaders = {
+      'X-Access-Token':
+      Provider.of<LoginInfo>(context, listen: false).token
+    };
+    final response =
+    await http.get(BASE_URL + '/friends', headers: requestsHeaders);
+    if (response.statusCode == 200) {
+      return FriendsListModel.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to load FriendsList');
+    }
+  }
 }
 
 /*
@@ -304,18 +321,3 @@ Future<FriendsListResponse> fetchFriendsList() async {
   }
 }
 */
-
-Future<FriendsListModel> fetchFriendsList() async {
-  const String BASE_URL = 'http://15.164.167.20:5000';
-  Map<String, String> requestsHeaders = {
-    'X-Access-Token':
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlRlc3QiLCJrZXkiOiJiNWU0NGI0Zi0zZGMxLTRlYzYtOTI5OS04Mzg0OTkyZTM3MmQiLCJpYXQiOjE1OTIwNTUyMTMsImV4cCI6MTYxMzY1NTIxM30.60SopvoistR4ILgZZjpODJUwXrrXeRktJEzHu5NxM7c'
-  };
-  final response =
-      await http.get(BASE_URL + '/friends', headers: requestsHeaders);
-  if (response.statusCode == 200) {
-    return FriendsListModel.fromJson(json.decode(response.body));
-  } else {
-    throw Exception('Failed to load FriendsList');
-  }
-}
