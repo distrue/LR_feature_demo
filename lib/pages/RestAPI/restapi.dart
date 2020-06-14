@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'package:hello/login_info.dart';
 import 'friendslist_model.dart';
 
 class RestApi extends StatelessWidget {
@@ -50,7 +52,13 @@ class ActionBar extends StatelessWidget {
           _buildIcon(Icons.music_note),
           Container(
             margin: const EdgeInsets.only(right: 8),
-            child: _buildIcon(Icons.settings),
+            child: GestureDetector(
+              onTap: () => {
+                logout(context),
+                Provider.of<LoginInfo>(context, listen: false).logout(),
+              },
+              child: _buildIcon(Icons.exit_to_app),
+            ),
           ),
         ],
       ),
@@ -62,6 +70,22 @@ class ActionBar extends StatelessWidget {
       padding: const EdgeInsets.all(9),
       child: Icon(icon, size: 25),
     );
+  }
+
+  Future<String> logout(BuildContext context) async {
+    var requestsBody = json.encode({'pass': "zero100"});
+    const String BASE_URL = 'http://15.164.167.20:5000';
+    final response = await http.post(BASE_URL + '/logout',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Access-Token': Provider.of<LoginInfo>(context, listen: false).token
+        },
+        body: requestsBody);
+    if (response.statusCode == 200) {
+      return 'Logout Success';
+    } else {
+      throw Exception('Logout Fail');
+    }
   }
 }
 
