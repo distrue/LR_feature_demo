@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:provider/provider.dart';
@@ -58,7 +59,6 @@ class ActionBar extends StatelessWidget {
 }
 
 class MessageList extends StatefulWidget {
-  
   MessageList({Key key}) : super(key: key);
 
   @override
@@ -75,6 +75,11 @@ class MessageListState extends State<MessageList> {
   @override
   void initState() {
     super.initState();
+    fetchRecentChatList().then((value) {
+      debugPrint("HelloHello");
+      value.forEach((element) => messages.add(element));
+      setState(() {});
+    });
     channel = IOWebSocketChannel.connect('ws://15.164.167.20:4000/', headers: {
       'token': Provider.of<LoginInfo>(context, listen: false).token
     });
@@ -202,6 +207,20 @@ class MessageListState extends State<MessageList> {
         color: Colors.black26,
       ),
     );
+  }
+
+  Future<List<dynamic>> fetchRecentChatList() async {
+    const String BASE_URL = 'http://15.164.167.20:5000';
+    Map<String, String> requestsHeaders = {
+      'X-Access-Token': Provider.of<LoginInfo>(context, listen: false).token
+    };
+    final response =
+        await http.get(BASE_URL + '/recent', headers: requestsHeaders);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load RecentChatList');
+    }
   }
 }
 
