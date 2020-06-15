@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:provider/provider.dart';
+import 'package:hello/login_info.dart';
 import 'dart:convert';
 
-const String _name = '김성윤';
 const _kakaoBackgroundColor = Color(0xffaec3d2);
 const _kakaoColor = Color(0xfff8de00);
 final boxDecoration = BoxDecoration(
@@ -57,8 +58,7 @@ class ActionBar extends StatelessWidget {
 }
 
 class MessageList extends StatefulWidget {
-  final WebSocketChannel channel =
-      IOWebSocketChannel.connect('ws://15.164.167.20:4000/');
+  
   MessageList({Key key}) : super(key: key);
 
   @override
@@ -70,12 +70,16 @@ class MessageListState extends State<MessageList> {
   ScrollController _scrollController = new ScrollController();
   TextEditingController _textEditingController = new TextEditingController();
   bool isTextFieldEmpty = true;
+  WebSocketChannel channel;
 
   @override
   void initState() {
     super.initState();
+    channel = IOWebSocketChannel.connect('ws://15.164.167.20:4000/', headers: {
+      'token': Provider.of<LoginInfo>(context, listen: false).token
+    });
     _textEditingController.addListener(textFieldOnChange);
-    widget.channel.stream.listen((data) {
+    channel.stream.listen((data) {
       debugPrint("11111/DataReceived: " + data);
       setState(() {
         messages.add(json.decode(data));
@@ -101,14 +105,17 @@ class MessageListState extends State<MessageList> {
   }
 
   void _sendMessage(String text) {
-    widget.channel.sink.add(json.encode({'text': text, 'from': _name}));
+    channel.sink.add(json.encode({
+      'msg': text,
+      'from': Provider.of<LoginInfo>(context, listen: false).name
+    }));
     _textEditingController.clear();
   }
 
   @override
   void dispose() {
     _textEditingController.dispose();
-    widget.channel.sink.close();
+    channel.sink.close();
     super.dispose();
   }
 
@@ -125,9 +132,10 @@ class MessageListState extends State<MessageList> {
               controller: _scrollController,
               itemBuilder: (BuildContext context, int index) {
                 return ChatMessageItem(
-                    text: messages[index]['text'],
+                    text: messages[index]['msg'],
                     userName: messages[index]['from'],
-                    isMyMessage: messages[index]['from'] == _name);
+                    isMyMessage: messages[index]['from'] ==
+                        Provider.of<LoginInfo>(context, listen: false).name);
               },
             ),
           ),
