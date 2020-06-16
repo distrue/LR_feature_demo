@@ -67,7 +67,8 @@ class MessageList extends StatefulWidget {
   MessageListState createState() => MessageListState();
 }
 
-class MessageListState extends State<MessageList> {
+class MessageListState extends State<MessageList>
+    with AutomaticKeepAliveClientMixin<MessageList> {
   ScrollController _scrollController = new ScrollController();
   TextEditingController _textEditingController = new TextEditingController();
   bool isTextFieldEmpty = true;
@@ -253,6 +254,9 @@ class MessageListState extends State<MessageList> {
       throw Exception('Failed to load RecentChatList');
     }
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class ChatMessageItem extends StatelessWidget {
