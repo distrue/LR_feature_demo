@@ -218,7 +218,8 @@ class FriendsList extends StatefulWidget {
   FriendsListState createState() => FriendsListState();
 }
 
-class FriendsListState extends State<FriendsList> {
+class FriendsListState extends State<FriendsList>
+    with AutomaticKeepAliveClientMixin<FriendsList> {
   bool friendsOpen = true;
   //Future<FriendsListResponse> futureFriendsListFromServer;
   Future<FriendsListModel> futureFriendsListModel;
@@ -339,6 +340,9 @@ class FriendsListState extends State<FriendsList> {
       throw Exception('Failed to load FriendsList');
     }
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 /*
