@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:hello/login_info.dart';
 import 'friendslist_model.dart';
+import 'package:lottie/lottie.dart';
 
 class RestApi extends StatelessWidget {
   @override
@@ -311,8 +312,15 @@ class FriendsListState extends State<FriendsList> {
         } else if (snapshot.hasError) {
           return Text("${snapshot.error}");
         }
-        return Center(
-          child: CircularProgressIndicator(),
+        return Container(
+          child: Center(
+            child: Lottie.asset(
+                //'assets/24504-dots-loading-animation.json',
+                'assets/24186-pride-colors-circle-loading.json',
+                width: 150,
+                height: 150,
+                fit: BoxFit.fill),
+          ),
         );
       },
     );
@@ -321,8 +329,7 @@ class FriendsListState extends State<FriendsList> {
   Future<FriendsListModel> fetchFriendsList() async {
     const String BASE_URL = 'http://15.164.167.20:5000';
     Map<String, String> requestsHeaders = {
-      'X-Access-Token':
-      Provider.of<LoginInfo>(context, listen: false).token
+      'X-Access-Token': Provider.of<LoginInfo>(context, listen: false).token
     };
     final response =
         await http.get(BASE_URL + '/friends', headers: requestsHeaders);

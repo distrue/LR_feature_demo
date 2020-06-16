@@ -6,6 +6,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:provider/provider.dart';
 import 'package:hello/login_info.dart';
 import 'dart:convert';
+import 'package:lottie/lottie.dart';
 
 const _kakaoBackgroundColor = Color(0xffaec3d2);
 const _kakaoColor = Color(0xfff8de00);
@@ -128,44 +129,51 @@ class MessageListState extends State<MessageList> {
           child: Container(
             color: _kakaoBackgroundColor,
             child: FutureBuilder<List<dynamic>>(
-                future: futureRecentChatList,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    bool isComplete =
-                        Provider.of<RecentChatInfo>(context, listen: false)
-                            .isComplete;
-                    if (!isComplete) {
+              future: futureRecentChatList,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  bool isComplete =
                       Provider.of<RecentChatInfo>(context, listen: false)
-                          .setRecentChatList(snapshot.data);
-                    }
-                    return Consumer<RecentChatInfo>(
-                      builder: (context, recentChatInfo, child) {
-                        return ListView.builder(
-                          scrollDirection: Axis.vertical,
-                          itemCount: recentChatInfo.recentChatList.length,
-                          controller: _scrollController,
-                          itemBuilder: (BuildContext context, int index) {
-                            return ChatMessageItem(
-                                text: recentChatInfo.recentChatList[index]
-                                    ['msg'],
-                                userName: recentChatInfo.recentChatList[index]
-                                    ['from'],
-                                isMyMessage: recentChatInfo
-                                        .recentChatList[index]['from'] ==
-                                    Provider.of<LoginInfo>(context,
-                                            listen: false)
-                                        .name);
-                          },
-                        );
-                      },
-                    );
-                  } else if (snapshot.hasError) {
-                    return Text("${snapshot.error}");
+                          .isComplete;
+                  if (!isComplete) {
+                    Provider.of<RecentChatInfo>(context, listen: false)
+                        .setRecentChatList(snapshot.data);
                   }
-                  return Container(
-                    color: _kakaoColor,
+                  return Consumer<RecentChatInfo>(
+                    builder: (context, recentChatInfo, child) {
+                      return ListView.builder(
+                        scrollDirection: Axis.vertical,
+                        itemCount: recentChatInfo.recentChatList.length,
+                        controller: _scrollController,
+                        itemBuilder: (BuildContext context, int index) {
+                          return ChatMessageItem(
+                              text: recentChatInfo.recentChatList[index]['msg'],
+                              userName: recentChatInfo.recentChatList[index]
+                                  ['from'],
+                              isMyMessage: recentChatInfo.recentChatList[index]
+                                      ['from'] ==
+                                  Provider.of<LoginInfo>(context, listen: false)
+                                      .name);
+                        },
+                      );
+                    },
                   );
-                }),
+                } else if (snapshot.hasError) {
+                  return Text("${snapshot.error}");
+                }
+                return Container(
+                  color: _kakaoBackgroundColor,
+                  child: Center(
+                    child: Lottie.asset(
+                        //'assets/24504-dots-loading-animation.json',
+                        'assets/24186-pride-colors-circle-loading.json',
+                        width: 150,
+                        height: 150,
+                        fit: BoxFit.fill),
+                  ),
+                );
+              },
+            ),
           ),
         ),
         Row(
