@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:hello/pages/SocketIO/recentchat_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/io.dart';
@@ -87,7 +88,6 @@ class MessageListState extends State<MessageList>
       debugPrint("11111/DataReceived: " + data);
       Provider.of<RecentChatInfo>(context, listen: false)
           .addRecentChat(json.decode(data));
-      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     }, onDone: () {
       debugPrint("11111/Task Done");
     }, onError: (error) {
@@ -124,6 +124,8 @@ class MessageListState extends State<MessageList>
 
   @override
   Widget build(BuildContext context) {
+    SchedulerBinding.instance.addPostFrameCallback((_) =>
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent));
     return Column(
       children: <Widget>[
         Expanded(
