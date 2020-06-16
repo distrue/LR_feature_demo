@@ -275,7 +275,7 @@ class ChatMessageItem extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
-            getMessageBubble(context, isMyMessage),
+            MessageBubble(isMyMessage: true, text: text),
           ],
         ),
       );
@@ -311,7 +311,7 @@ class ChatMessageItem extends StatelessWidget {
                         TextStyle(fontSize: 12.5, fontWeight: FontWeight.w400),
                   ),
                 ),
-                getMessageBubble(context, isMyMessage),
+                MessageBubble(isMyMessage: false, text: text),
               ],
             )
           ],
@@ -319,26 +319,55 @@ class ChatMessageItem extends StatelessWidget {
       );
     }
   }
+}
 
-  Container getMessageBubble(BuildContext context, bool isMyMessage) {
+class MessageBubble extends StatefulWidget {
+  MessageBubble({Key key, this.isMyMessage, this.text}) : super(key: key);
+
+  final isMyMessage;
+  final text;
+
+  @override
+  MessageBubbleState createState() => MessageBubbleState();
+}
+
+class MessageBubbleState extends State<MessageBubble>
+    with TickerProviderStateMixin {
+  AnimationController controller;
+  Animation<double> animation;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = AnimationController(
+        duration: const Duration(milliseconds: 2000), vsync: this);
+    animation = CurvedAnimation(parent: controller, curve: Curves.easeIn);
+    controller.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     Color color;
-    if (isMyMessage)
+    if (widget.isMyMessage)
       color = _kakaoColor;
     else
       color = Color(0xffffffff);
-    return Container(
-      constraints:
-          BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.6),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.only(top: 8, bottom: 8, right: 11, left: 11),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 15.5,
-          fontWeight: FontWeight.w400,
+    return FadeTransition(
+      opacity: animation,
+      child: Container(
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.6),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.only(top: 8, bottom: 8, right: 11, left: 11),
+        child: Text(
+          widget.text,
+          style: TextStyle(
+            fontSize: 15.5,
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ),
     );
