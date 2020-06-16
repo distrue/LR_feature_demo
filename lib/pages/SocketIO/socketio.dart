@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:hello/pages/SocketIO/recentchat_info.dart';
+import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:provider/provider.dart';
+import 'package:hello/login_info.dart';
 import 'dart:convert';
+import 'package:lottie/lottie.dart';
 
-const String _name = '김성윤';
 const _kakaoBackgroundColor = Color(0xffaec3d2);
 const _kakaoColor = Color(0xfff8de00);
 final boxDecoration = BoxDecoration(
@@ -57,8 +61,6 @@ class ActionBar extends StatelessWidget {
 }
 
 class MessageList extends StatefulWidget {
-  final WebSocketChannel channel =
-      IOWebSocketChannel.connect('ws://15.164.167.20:4000/');
   MessageList({Key key}) : super(key: key);
 
   @override
@@ -66,20 +68,24 @@ class MessageList extends StatefulWidget {
 }
 
 class MessageListState extends State<MessageList> {
-  List<Map<String, dynamic>> messages = List<Map<String, dynamic>>();
   ScrollController _scrollController = new ScrollController();
   TextEditingController _textEditingController = new TextEditingController();
   bool isTextFieldEmpty = true;
+  WebSocketChannel channel;
+  Future<List<dynamic>> futureRecentChatList;
 
   @override
   void initState() {
     super.initState();
+    futureRecentChatList = fetchRecentChatList();
+    channel = IOWebSocketChannel.connect('ws://15.164.167.20:4000/', headers: {
+      'token': Provider.of<LoginInfo>(context, listen: false).token
+    });
     _textEditingController.addListener(textFieldOnChange);
-    widget.channel.stream.listen((data) {
+    channel.stream.listen((data) {
       debugPrint("11111/DataReceived: " + data);
-      setState(() {
-        messages.add(json.decode(data));
-      });
+      Provider.of<RecentChatInfo>(context, listen: false)
+          .addRecentChat(json.decode(data));
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     }, onDone: () {
       debugPrint("11111/Task Done");
@@ -101,14 +107,17 @@ class MessageListState extends State<MessageList> {
   }
 
   void _sendMessage(String text) {
-    widget.channel.sink.add(json.encode({'text': text, 'from': _name}));
+    channel.sink.add(json.encode({
+      'msg': text,
+      'from': Provider.of<LoginInfo>(context, listen: false).name
+    }));
     _textEditingController.clear();
   }
 
   @override
   void dispose() {
     _textEditingController.dispose();
-    widget.channel.sink.close();
+    channel.sink.close();
     super.dispose();
   }
 
@@ -119,15 +128,50 @@ class MessageListState extends State<MessageList> {
         Expanded(
           child: Container(
             color: _kakaoBackgroundColor,
-            child: ListView.builder(
-              scrollDirection: Axis.vertical,
-              itemCount: messages.length,
-              controller: _scrollController,
-              itemBuilder: (BuildContext context, int index) {
-                return ChatMessageItem(
-                    text: messages[index]['text'],
-                    userName: messages[index]['from'],
-                    isMyMessage: messages[index]['from'] == _name);
+            child: FutureBuilder<List<dynamic>>(
+              future: futureRecentChatList,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  bool isComplete =
+                      Provider.of<RecentChatInfo>(context, listen: false)
+                          .isComplete;
+                  if (!isComplete) {
+                    Provider.of<RecentChatInfo>(context, listen: false)
+                        .setRecentChatList(snapshot.data);
+                  }
+                  return Consumer<RecentChatInfo>(
+                    builder: (context, recentChatInfo, child) {
+                      return ListView.builder(
+                        scrollDirection: Axis.vertical,
+                        itemCount: recentChatInfo.recentChatList.length,
+                        controller: _scrollController,
+                        itemBuilder: (BuildContext context, int index) {
+                          return ChatMessageItem(
+                              text: recentChatInfo.recentChatList[index]['msg'],
+                              userName: recentChatInfo.recentChatList[index]
+                                  ['from'],
+                              isMyMessage: recentChatInfo.recentChatList[index]
+                                      ['from'] ==
+                                  Provider.of<LoginInfo>(context, listen: false)
+                                      .name);
+                        },
+                      );
+                    },
+                  );
+                } else if (snapshot.hasError) {
+                  return Text("${snapshot.error}");
+                }
+                return Container(
+                  color: _kakaoBackgroundColor,
+                  child: Center(
+                    child: Lottie.asset(
+                        //'assets/24504-dots-loading-animation.json',
+                        'assets/24186-pride-colors-circle-loading.json',
+                        width: 150,
+                        height: 150,
+                        fit: BoxFit.fill),
+                  ),
+                );
               },
             ),
           ),
@@ -194,6 +238,20 @@ class MessageListState extends State<MessageList> {
         color: Colors.black26,
       ),
     );
+  }
+
+  Future<List<dynamic>> fetchRecentChatList() async {
+    const String BASE_URL = 'http://15.164.167.20:5000';
+    Map<String, String> requestsHeaders = {
+      'X-Access-Token': Provider.of<LoginInfo>(context, listen: false).token
+    };
+    final response =
+        await http.get(BASE_URL + '/recent', headers: requestsHeaders);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load RecentChatList');
+    }
   }
 }
 
