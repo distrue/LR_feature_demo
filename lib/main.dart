@@ -6,7 +6,8 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 import './pages/tflite.dart';
-import './pages/socketio.dart';
+import 'pages/SocketIO/socketio.dart';
+import 'pages/SocketIO/recentchat_info.dart';
 import 'pages/RestAPI/restapi.dart';
 
 List<CameraDescription> cameras;
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => LoginInfo()),
+        ChangeNotifierProvider(create: (context) => RecentChatInfo()),
       ],
       child: MaterialApp(
           title: "LoyalRoader Demo",

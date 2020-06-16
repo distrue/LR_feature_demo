@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hello/pages/SocketIO/recentchat_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -66,29 +67,24 @@ class MessageList extends StatefulWidget {
 }
 
 class MessageListState extends State<MessageList> {
-  List<Map<String, dynamic>> messages = List<Map<String, dynamic>>();
   ScrollController _scrollController = new ScrollController();
   TextEditingController _textEditingController = new TextEditingController();
   bool isTextFieldEmpty = true;
   WebSocketChannel channel;
+  Future<List<dynamic>> futureRecentChatList;
 
   @override
   void initState() {
     super.initState();
-    fetchRecentChatList().then((value) {
-      debugPrint("HelloHello");
-      value.forEach((element) => messages.add(element));
-      setState(() {});
-    });
+    futureRecentChatList = fetchRecentChatList();
     channel = IOWebSocketChannel.connect('ws://15.164.167.20:4000/', headers: {
       'token': Provider.of<LoginInfo>(context, listen: false).token
     });
     _textEditingController.addListener(textFieldOnChange);
     channel.stream.listen((data) {
       debugPrint("11111/DataReceived: " + data);
-      setState(() {
-        messages.add(json.decode(data));
-      });
+      Provider.of<RecentChatInfo>(context, listen: false)
+          .addRecentChat(json.decode(data));
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     }, onDone: () {
       debugPrint("11111/Task Done");
@@ -131,18 +127,45 @@ class MessageListState extends State<MessageList> {
         Expanded(
           child: Container(
             color: _kakaoBackgroundColor,
-            child: ListView.builder(
-              scrollDirection: Axis.vertical,
-              itemCount: messages.length,
-              controller: _scrollController,
-              itemBuilder: (BuildContext context, int index) {
-                return ChatMessageItem(
-                    text: messages[index]['msg'],
-                    userName: messages[index]['from'],
-                    isMyMessage: messages[index]['from'] ==
-                        Provider.of<LoginInfo>(context, listen: false).name);
-              },
-            ),
+            child: FutureBuilder<List<dynamic>>(
+                future: futureRecentChatList,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    bool isComplete =
+                        Provider.of<RecentChatInfo>(context, listen: false)
+                            .isComplete;
+                    if (!isComplete) {
+                      Provider.of<RecentChatInfo>(context, listen: false)
+                          .setRecentChatList(snapshot.data);
+                    }
+                    return Consumer<RecentChatInfo>(
+                      builder: (context, recentChatInfo, child) {
+                        return ListView.builder(
+                          scrollDirection: Axis.vertical,
+                          itemCount: recentChatInfo.recentChatList.length,
+                          controller: _scrollController,
+                          itemBuilder: (BuildContext context, int index) {
+                            return ChatMessageItem(
+                                text: recentChatInfo.recentChatList[index]
+                                    ['msg'],
+                                userName: recentChatInfo.recentChatList[index]
+                                    ['from'],
+                                isMyMessage: recentChatInfo
+                                        .recentChatList[index]['from'] ==
+                                    Provider.of<LoginInfo>(context,
+                                            listen: false)
+                                        .name);
+                          },
+                        );
+                      },
+                    );
+                  } else if (snapshot.hasError) {
+                    return Text("${snapshot.error}");
+                  }
+                  return Container(
+                    color: _kakaoColor,
+                  );
+                }),
           ),
         ),
         Row(

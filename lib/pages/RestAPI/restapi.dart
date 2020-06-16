@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hello/pages/SocketIO/recentchat_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'package:provider/provider.dart';
 import 'package:hello/login_info.dart';
 import 'friendslist_model.dart';
 
@@ -17,8 +17,8 @@ class RestApi extends StatelessWidget {
           child: ListView(
             children: <Widget>[
               FriendsListItem(
-                  name: '김성윤',
-                  message: '상태 메세지 입니다',
+                  name: Provider.of<LoginInfo>(context, listen: false).name,
+                  message: Provider.of<LoginInfo>(context, listen: false).key,
                   music: '더 위로',
                   musician: '창모(CHANGMO)'),
               Container(
@@ -54,9 +54,11 @@ class ActionBar extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(right: 8),
             child: GestureDetector(
-              onTap: () => {
-                logout(context),
-                Provider.of<LoginInfo>(context, listen: false).logout(),
+              onTap: () {
+                logout(context);
+                Provider.of<LoginInfo>(context, listen: false).logout();
+                Provider.of<RecentChatInfo>(context, listen: false)
+                    .deleteRecentChatList();
               },
               child: _buildIcon(Icons.exit_to_app),
             ),
@@ -316,7 +318,6 @@ class FriendsListState extends State<FriendsList> {
     );
   }
 
-
   Future<FriendsListModel> fetchFriendsList() async {
     const String BASE_URL = 'http://15.164.167.20:5000';
     Map<String, String> requestsHeaders = {
@@ -324,7 +325,7 @@ class FriendsListState extends State<FriendsList> {
       Provider.of<LoginInfo>(context, listen: false).token
     };
     final response =
-    await http.get(BASE_URL + '/friends', headers: requestsHeaders);
+        await http.get(BASE_URL + '/friends', headers: requestsHeaders);
     if (response.statusCode == 200) {
       return FriendsListModel.fromJson(json.decode(response.body));
     } else {
